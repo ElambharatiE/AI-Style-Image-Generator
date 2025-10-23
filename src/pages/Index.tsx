@@ -7,38 +7,42 @@ import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 import GenerationForm from "@/components/GenerationForm";
 import GenerationGallery from "@/components/GenerationGallery";
-
 const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const navigate = useNavigate();
-
   useEffect(() => {
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        if (!session && !loading) {
-          navigate("/auth");
-        }
+    const {
+      data: {
+        subscription
       }
-    );
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      if (!session && !loading) {
+        navigate("/auth");
+      }
+    });
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({
+      data: {
+        session
+      }
+    }) => {
       setSession(session);
       setLoading(false);
       if (!session) {
         navigate("/auth");
       }
     });
-
     return () => subscription.unsubscribe();
   }, [navigate, loading]);
-
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    const {
+      error
+    } = await supabase.auth.signOut();
     if (error) {
       toast.error("Error signing out");
     } else {
@@ -46,33 +50,30 @@ const Index = () => {
       navigate("/auth");
     }
   };
-
   const handleGenerationComplete = () => {
     setRefreshKey(prev => prev + 1);
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Sparkles className="w-12 h-12 text-primary mx-auto mb-4 animate-pulse" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!session) {
     return null;
   }
-
-  return (
-    <div className="min-h-screen relative overflow-hidden">
+  return <div className="min-h-screen relative overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary rounded-full blur-3xl animate-float" style={{ animationDelay: "1.5s" }} />
-        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-accent rounded-full blur-3xl animate-float" style={{ animationDelay: "3s" }} />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary rounded-full blur-3xl animate-float" style={{
+        animationDelay: "1.5s"
+      }} />
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-accent rounded-full blur-3xl animate-float" style={{
+        animationDelay: "3s"
+      }} />
       </div>
 
       {/* Header */}
@@ -82,9 +83,7 @@ const Index = () => {
             <div className="p-2 bg-gradient-to-br from-primary to-secondary rounded-lg">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Pixverse AI
-            </h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"> AI Style Image Generator</h1>
           </div>
 
           <div className="flex items-center gap-4">
@@ -92,12 +91,7 @@ const Index = () => {
               <User className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">{session.user.email}</span>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSignOut}
-              className="hover:bg-destructive/10 hover:text-destructive"
-            >
+            <Button variant="ghost" size="icon" onClick={handleSignOut} className="hover:bg-destructive/10 hover:text-destructive">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
@@ -126,12 +120,7 @@ const Index = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-2xl font-bold">Your Creations</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setRefreshKey(prev => prev + 1)}
-                className="glass"
-              >
+              <Button variant="outline" size="sm" onClick={() => setRefreshKey(prev => prev + 1)} className="glass">
                 Refresh
               </Button>
             </div>
@@ -146,8 +135,6 @@ const Index = () => {
           <p>© 2025 Pixverse AI. Powered by Lovable Cloud & Gemini AI.</p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
