@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -27,6 +27,41 @@ const GenerationForm = ({ onGenerate }: GenerationFormProps) => {
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState("cinematic");
   const [loading, setLoading] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Invalid file type. Please upload a JPG, PNG, or WEBP image.");
+      return;
+    }
+
+    // Validate file size (10MB)
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("File size must be less than 10MB.");
+      return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setUploadedImage(reader.result as string);
+      setUploadedFileName(file.name);
+      toast.success("Image uploaded successfully!");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setUploadedImage(null);
+    setUploadedFileName(null);
+  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +100,8 @@ const GenerationForm = ({ onGenerate }: GenerationFormProps) => {
         body: { 
           generationId: generation.id,
           prompt: prompt.trim(), 
-          style 
+          style,
+          uploadedImage: uploadedImage || undefined
         },
       });
 
@@ -89,6 +125,8 @@ const GenerationForm = ({ onGenerate }: GenerationFormProps) => {
 
       toast.success("Image generated successfully!");
       setPrompt("");
+      setUploadedImage(null);
+      setUploadedFileName(null);
       onGenerate();
     } catch (error) {
       console.error("Generation error:", error);
@@ -108,6 +146,59 @@ const GenerationForm = ({ onGenerate }: GenerationFormProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleGenerate} className="space-y-4">
+          {/* Image Upload Section */}
+          <div className="space-y-2">
+            <Label>Upload Your Photo (Optional)</Label>
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 glass border-border/50"
+                  disabled={loading}
+                  onClick={() => document.getElementById('image-upload')?.click()}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {uploadedFileName ? "Change Photo" : "Upload Photo"}
+                </Button>
+                <input
+                  id="image-upload"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                  disabled={loading}
+                />
+              </div>
+              
+              {uploadedImage && (
+                <div className="relative glass rounded-lg p-3 border border-border/50">
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={uploadedImage} 
+                      alt="Uploaded preview" 
+                      className="w-16 h-16 rounded object-cover"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{uploadedFileName}</p>
+                      <p className="text-xs text-muted-foreground">1 photo uploaded</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                      onClick={handleRemoveImage}
+                      disabled={loading}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="prompt">Describe your image</Label>
             <Input

@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { generationId, prompt, style } = await req.json();
+    const { generationId, prompt, style, uploadedImage } = await req.json();
     
     if (!generationId || !prompt || !style) {
       throw new Error("Missing required parameters");
@@ -38,6 +38,35 @@ serve(async (req) => {
     const enhancedPrompt = `${prompt}. Style: ${stylePrompts[style] || stylePrompts.cinematic}. Ultra high resolution, masterpiece quality.`;
 
     console.log("Generating image with prompt:", enhancedPrompt);
+    console.log("Has uploaded image:", !!uploadedImage);
+
+    // Build messages array
+    const messages: any[] = [];
+    
+    if (uploadedImage) {
+      // Image editing mode
+      messages.push({
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: enhancedPrompt
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: uploadedImage
+            }
+          }
+        ]
+      });
+    } else {
+      // Text-to-image generation mode
+      messages.push({
+        role: "user",
+        content: enhancedPrompt
+      });
+    }
 
     // Call Lovable AI Gateway for image generation
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -48,12 +77,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-image-preview",
-        messages: [
-          {
-            role: "user",
-            content: enhancedPrompt,
-          },
-        ],
+        messages: messages,
         modalities: ["image", "text"],
       }),
     });
