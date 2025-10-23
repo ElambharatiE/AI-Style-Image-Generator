@@ -132,7 +132,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="relative z-10 border-t border-border/50 mt-16 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
-          <p>© 2025 Pixverse AI. Powered by Lovable Cloud & Gemini AI.</p>
+          <p>© 2025 AI Style Image Generator. Powered by Sakthipriyadharsini M</p>
         </div>
       </footer>
     </div>;
